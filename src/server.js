@@ -14,8 +14,9 @@ import { renderBuilderCard, CARD_SIZE } from './card.js';
 const app = express();
 const PORT = Number(process.env.PORT || 3000);
 const ROOT = path.resolve('.');
-const UPLOAD_DIR = path.resolve('storage/uploads');
-const GENERATED_DIR = path.resolve('storage/generated');
+const isVercel = Boolean(process.env.VERCEL);
+const UPLOAD_DIR = isVercel ? path.resolve('/tmp/uploads') : path.resolve('storage/uploads');
+const GENERATED_DIR = isVercel ? path.resolve('/tmp/generated') : path.resolve('storage/generated');
 const TEMPLATE_PATH = path.resolve('public/master-template.png');
 
 await fs.mkdir(UPLOAD_DIR, { recursive: true });
@@ -252,7 +253,11 @@ app.get(/.*/, (_req, res) => {
   res.sendFile(path.join(ROOT, 'public/index.html'));
 });
 
-app.listen(PORT, () => {
-  console.log(`Hacker House Goa Builder ID generator running at http://localhost:${PORT}`);
-  console.log(`Master template: ${TEMPLATE_PATH}`);
-});
+export default app;
+
+if (!process.env.VERCEL) {
+  app.listen(PORT, () => {
+    console.log(`Hacker House Goa Builder ID generator running at http://localhost:${PORT}`);
+    console.log(`Master template: ${TEMPLATE_PATH}`);
+  });
+}

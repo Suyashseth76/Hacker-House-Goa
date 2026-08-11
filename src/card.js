@@ -5,7 +5,7 @@ import sharp from 'sharp';
 const WIDTH = 1055;
 const HEIGHT = 1491;
 const TEMPLATE = path.resolve('public/master-template.png');
-const GENERATED_DIR = path.resolve('storage/generated');
+const GENERATED_DIR = process.env.VERCEL ? path.resolve('/tmp/generated') : path.resolve('storage/generated');
 
 const COLORS = {
   green: '#0b4939'

@@ -1,6 +1,8 @@
 node_modules/
 .env
+.vercel/
 storage/uploads/*
 storage/generated/*
 db/*.sqlite*
 .DS_Store
+

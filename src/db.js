@@ -2,11 +2,18 @@ import Database from 'better-sqlite3';
 import fs from 'node:fs';
 import path from 'node:path';
 
-const dbDir = path.resolve('db');
+const isVercel = Boolean(process.env.VERCEL);
+const dbDir = isVercel ? path.resolve('/tmp/db') : path.resolve('db');
 fs.mkdirSync(dbDir, { recursive: true });
 
 const db = new Database(path.join(dbDir, 'builder-id.sqlite'));
-db.pragma('journal_mode = WAL');
+if (!isVercel) {
+  try {
+    db.pragma('journal_mode = WAL');
+  } catch {
+    // WAL mode fallback for serverless environments
+  }
+}
 db.pragma('foreign_keys = ON');
 
 db.exec(`
