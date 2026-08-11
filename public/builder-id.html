@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#036735" />
+  <meta name="description" content="Hacker House Goa 2026 Builder ID Generator" />
+  <title>Builder ID Generator — Hacker House Goa 2026</title>
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <nav class="top-nav">
+    <div class="nav-container">
+      <a href="/" class="nav-brand">
+        <img src="/hacker-house-goa-logo-clean.png" alt="Hacker House Goa Logo" class="nav-logo" />
+      </a>
+      <div class="nav-links">
+        <a href="/" class="nav-link">Home</a>
+        <a href="/builder-id" class="nav-link active">Builder ID</a>
+        <a href="/crew-frame" class="nav-link">Crew Frame</a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="page-shell">
+    <header class="hero">
+      <a href="/">
+        <img
+          class="hero-logo"
+          src="/hacker-house-goa-logo-clean.png"
+          alt="Hacker House Goa"
+        />
+      </a>
+      <h2>BUILDER ID GENERATOR</h2>
+      <p class="subtitle">Create your personalized Builder ID using the official Goa master template.</p>
+      <div class="dimension-badge">1055 × 1491 PX</div>
+    </header>
+
+    <section class="workspace">
+      <form id="builder-form" class="panel form-panel">
+        <div class="panel-ornament" aria-hidden="true"><span>✦</span><span>✦</span><span>✦</span></div>
+        <div class="panel-title">
+          <div>
+            <p class="section-kicker">TRAVEL PASS • 2026</p>
+            <h3>YOUR BUILDER DETAILS</h3>
+          </div>
+          <span id="id-status" class="status">New Builder</span>
+        </div>
+
+        <div class="field-grid">
+          <label class="field">
+            <span>Name</span>
+            <input id="name" name="name" maxlength="60" autocomplete="name" placeholder="e.g. Manish Dubey" required />
+          </label>
+
+          <label class="field">
+            <span>Team name</span>
+            <input id="teamName" name="teamName" maxlength="60" placeholder="e.g. AlphaCoders" required />
+          </label>
+        </div>
+
+        <label class="field photo-field">
+          <span>Photo</span>
+          <input id="photo" name="photo" type="file" accept="image/jpeg,image/png,image/webp" required />
+          <small>Use a clear portrait or landscape photo. It will be cropped into the existing circular frame.</small>
+        </label>
+
+        <div id="existing-id" class="existing-id hidden">
+          <div class="id-card-icon" aria-hidden="true">✦</div>
+          <div>
+            <span>Current Builder ID</span>
+            <strong id="builder-id-value">—</strong>
+            <small>This ID is generated for this page session and changes after refresh.</small>
+          </div>
+        </div>
+
+        <button id="generate" class="primary" type="submit"><span>REGENERATE BUILDER ID CARD</span><b aria-hidden="true">↗</b></button>
+        <p id="error" class="error" role="alert"></p>
+
+        <div class="form-footer" aria-hidden="true">
+          <span>GOA, INDIA</span>
+          <span>HH • 26</span>
+          <span>COASTAL EDITION</span>
+        </div>
+      </form>
+
+      <section class="panel preview-panel">
+        <div class="panel-title preview-title">
+          <div>
+            <p class="section-kicker">OFFICIAL EVENT PASS</p>
+            <h3>PREVIEW</h3>
+            <span class="muted">Master template preserved</span>
+          </div>
+          <span id="dimensions" class="status">1055 × 1491</span>
+        </div>
+
+        <div class="preview-wrap">
+          <div class="preview-label preview-label-left">GOA / INDIA</div>
+          <div class="preview-label preview-label-right">HH26 • ORIGINAL TEMPLATE</div>
+          <div class="card-frame">
+            <img id="preview" src="/master-template.png" alt="Hacker House Goa Builder ID preview" />
+          </div>
+          <div id="empty-state" class="empty-state hidden">
+            <strong>Your completed card will appear here.</strong>
+            <span>The artwork is the supplied master template; only your photo and personal fields are composited.</span>
+          </div>
+        </div>
+
+        <div class="actions">
+          <a id="download" class="secondary disabled" href="#"><span>DOWNLOAD PNG</span><b aria-hidden="true">↓</b></a>
+          <button id="share" class="secondary" type="button" disabled><span>SHARE BUILDER ID</span><b aria-hidden="true">↗</b></button>
+        </div>
+      </section>
+    </section>
+
+    <footer>
+      <span><strong>HACKER HOUSE GOA 2026</strong> · Master artwork supplied by the event.</span>
+      <span>Card export: exactly 1055 × 1491 px · GOA / INDIA</span>
+    </footer>
+  </main>
+  <script src="/app.js?v=5" defer></script>
+</body>
+</html>
