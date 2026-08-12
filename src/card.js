@@ -39,6 +39,11 @@ function fitTextSize(text, maxWidth, startSize = 28, minSize = 18) {
   return { text: str, size: minSize };
 }
 
+function toSvgPath(pathObj) {
+  // Replace any NaN values in SVG path strings to prevent Sharp / librsvg path parser truncation
+  return pathObj.toSVG(2).replace(/NaN/g, '0');
+}
+
 async function photoLayer(photoPath) {
   const diameter = 430;
   const left = 303;
@@ -92,9 +97,9 @@ export async function renderBuilderCard({ photoPath, name, builderId, teamName }
 
   const textSvg = `
     <svg width="${WIDTH}" height="${HEIGHT}" xmlns="http://www.w3.org/2000/svg">
-      ${namePath.toSVG(2)}
-      ${idPath.toSVG(2)}
-      ${teamPath.toSVG(2)}
+      ${toSvgPath(namePath)}
+      ${toSvgPath(idPath)}
+      ${toSvgPath(teamPath)}
     </svg>
   `;
   overlays.push({ input: Buffer.from(textSvg), left: 0, top: 0 });
