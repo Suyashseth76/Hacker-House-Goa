@@ -1,0 +1,180 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#036735" />
+  <meta name="description" content="Hacker House Goa 2026 Crew Frame Generator" />
+  <title>Crew Frame Generator — Hacker House Goa 2026</title>
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <nav class="top-nav">
+    <div class="nav-container">
+      <a href="/" class="nav-brand">
+        <img src="/hacker-house-goa-logo-clean.png" alt="Hacker House Goa Logo" class="nav-logo" />
+      </a>
+      <div class="nav-links">
+        <a href="/" class="nav-link">Home</a>
+        <a href="/builder-id" class="nav-link">Builder ID</a>
+        <a href="/crew-frame" class="nav-link active">Crew Frame</a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="page-shell">
+    <header class="hero">
+      <a href="/">
+        <img
+          class="hero-logo"
+          src="/hacker-house-goa-logo-clean.png"
+          alt="Hacker House Goa"
+        />
+      </a>
+      <h2>CREW & TEAM FRAME GENERATOR</h2>
+      <p class="subtitle">Assemble your squad (up to 3 members)! Generate your official team frame using the master Goa template.</p>
+      <div class="dimension-badge">1024 × 989 PX</div>
+    </header>
+
+    <section class="workspace">
+      <form id="crew-form" class="panel form-panel">
+        <div class="panel-ornament" aria-hidden="true"><span>✦</span><span>✦</span><span>✦</span></div>
+        <div class="panel-title">
+          <div>
+            <p class="section-kicker">MASTER CREW FRAME • 2026</p>
+            <h3>SQUAD DETAILS</h3>
+          </div>
+          <span id="crew-status" class="status">Max 3 Members</span>
+        </div>
+
+        <div class="field-grid">
+          <label class="field">
+            <span>Team / Squad Name</span>
+            <input id="crewTeamName" name="crewTeamName" maxlength="40" placeholder="e.g. WAVE HACKERS" required value="ALPHA BUILDERS" />
+          </label>
+        </div>
+
+        <div class="crew-members-section">
+          <h4 class="subhead-title">SQUAD MEMBERS (MAX 3)</h4>
+
+          <!-- Member 1 -->
+          <div class="member-card">
+            <div class="member-header">
+              <span class="member-badge">Member 1 (Required)</span>
+            </div>
+            <div class="field-grid-2">
+              <label class="field">
+                <span>Name</span>
+                <input class="m-name" data-index="0" placeholder="e.g. Alex Rivera" required value="ALEX RIVERA" />
+              </label>
+              <label class="field">
+                <span>Role / Stack</span>
+                <input class="m-role" data-index="0" placeholder="e.g. FULLSTACK / SOLANA" required value="FULLSTACK / RUST" />
+              </label>
+            </div>
+            <label class="field">
+              <span>Builder Title</span>
+              <input class="m-title" data-index="0" placeholder="e.g. Captain Hacker" value="“Captain Hacker”" />
+            </label>
+            <label class="field photo-field">
+              <span>Photo Avatar</span>
+              <input class="m-photo" data-index="0" type="file" accept="image/jpeg,image/png,image/webp" />
+            </label>
+          </div>
+
+          <!-- Member 2 -->
+          <div class="member-card">
+            <div class="member-header">
+              <span class="member-badge">Member 2 (Optional)</span>
+            </div>
+            <div class="field-grid-2">
+              <label class="field">
+                <span>Name</span>
+                <input class="m-name" data-index="1" placeholder="e.g. Sam Chen" value="SAM CHEN" />
+              </label>
+              <label class="field">
+                <span>Role / Stack</span>
+                <input class="m-role" data-index="1" placeholder="e.g. AI / PYTHON" value="AI / PYTHON" />
+              </label>
+            </div>
+            <label class="field">
+              <span>Builder Title</span>
+              <input class="m-title" data-index="1" placeholder="e.g. Neural Architect" value="“Neural Architect”" />
+            </label>
+            <label class="field photo-field">
+              <span>Photo Avatar</span>
+              <input class="m-photo" data-index="1" type="file" accept="image/jpeg,image/png,image/webp" />
+            </label>
+          </div>
+
+          <!-- Member 3 -->
+          <div class="member-card">
+            <div class="member-header">
+              <span class="member-badge">Member 3 (Optional)</span>
+            </div>
+            <div class="field-grid-2">
+              <label class="field">
+                <span>Name</span>
+                <input class="m-name" data-index="2" placeholder="e.g. Priya Sharma" value="PRIYA SHARMA" />
+              </label>
+              <label class="field">
+                <span>Role / Stack</span>
+                <input class="m-role" data-index="2" placeholder="e.g. UI/UX / FIGMA" value="UI/UX / DESIGN" />
+              </label>
+            </div>
+            <label class="field">
+              <span>Builder Title</span>
+              <input class="m-title" data-index="2" placeholder="e.g. Design Alchemist" value="“Design Alchemist”" />
+            </label>
+            <label class="field photo-field">
+              <span>Photo Avatar</span>
+              <input class="m-photo" data-index="2" type="file" accept="image/jpeg,image/png,image/webp" />
+            </label>
+          </div>
+        </div>
+
+        <button id="generate-crew" class="primary" type="submit"><span>UPDATE CREW FRAME</span><b aria-hidden="true">↗</b></button>
+        <p id="crew-error" class="error" role="alert"></p>
+
+        <div class="form-footer" aria-hidden="true">
+          <span>GOA, INDIA</span>
+          <span>HH • 2026</span>
+          <span>RETRO COASTAL EDITION</span>
+        </div>
+      </form>
+
+      <section class="panel preview-panel">
+        <div class="panel-title preview-title">
+          <div>
+            <p class="section-kicker">OFFICIAL CREW FRAME</p>
+            <h3>PREVIEW</h3>
+            <span class="muted">Master template composite</span>
+          </div>
+          <span class="status">1024 × 989</span>
+        </div>
+
+        <div class="preview-wrap crew-preview-wrap">
+          <div class="preview-label preview-label-left">GOA / INDIA</div>
+          <div class="preview-label preview-label-right">HH26 • CREW TEMPLATE</div>
+          
+          <div class="crew-canvas-container">
+            <canvas id="crew-canvas" width="1024" height="989"></canvas>
+          </div>
+        </div>
+
+        <div class="actions">
+          <button id="download-crew" class="secondary" type="button"><span>DOWNLOAD CREW FRAME</span><b aria-hidden="true">↓</b></button>
+          <button id="share-crew" class="secondary" type="button"><span>SHARE CREW FRAME</span><b aria-hidden="true">↗</b></button>
+        </div>
+      </section>
+    </section>
+
+    <footer>
+      <span><strong>HACKER HOUSE GOA 2026</strong> · Master Crew Frame Template.</span>
+      <span>PNG Export: 1024 × 989 px · GOA / INDIA</span>
+    </footer>
+  </main>
+
+  <script src="/crew-app.js?v=2" defer></script>
+</body>
+</html>

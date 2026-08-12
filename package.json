@@ -1,0 +1,22 @@
+{
+  "name": "hacker-house-goa-builder-id",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Hacker House Goa 2026 Builder ID generator using the supplied master template.",
+  "type": "module",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node --watch src/server.js"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "better-sqlite3": "^11.10.0",
+    "cookie-parser": "^1.4.7",
+    "express": "^5.1.0",
+    "helmet": "^8.1.0",
+    "multer": "^2.0.2",
+    "sharp": "^0.34.3"
+  }
+}
