@@ -11,10 +11,36 @@ const COLORS = {
   green: '#0b4939'
 };
 
-async function fitText(text, maxWidth, startSize = 24, minSize = 15) {
+// Cached Base64 Font Buffers for Self-Contained SVG Text Rendering
+let notoSerifBase64 = null;
+let robotoMonoBase64 = null;
+
+async function getEmbeddedFonts() {
+  if (notoSerifBase64 && robotoMonoBase64) {
+    return { notoSerifBase64, robotoMonoBase64 };
+  }
+
+  try {
+    const notoPath = path.resolve('assets/fonts/NotoSerif-Bold.ttf');
+    const robotoPath = path.resolve('assets/fonts/RobotoMono-Bold.ttf');
+
+    const [notoBuf, robotoBuf] = await Promise.all([
+      fs.readFile(notoPath),
+      fs.readFile(robotoPath)
+    ]);
+
+    notoSerifBase64 = notoBuf.toString('base64');
+    robotoMonoBase64 = robotoBuf.toString('base64');
+  } catch (err) {
+    console.error('Warning: Could not load local font files for SVG embedding:', err.message);
+  }
+
+  return { notoSerifBase64, robotoMonoBase64 };
+}
+
+async function fitText(text, maxWidth, startSize = 28, minSize = 18) {
   const escaped = escapeXml(text);
   for (let size = startSize; size >= minSize; size -= 1) {
-    // Approximate width for the condensed/bold style used by the template.
     if (escaped.length * size * 0.58 <= maxWidth) return { text: escaped, size };
   }
   return { text: escaped, size: minSize };
@@ -30,11 +56,7 @@ function escapeXml(value) {
 }
 
 async function photoLayer(photoPath) {
-  // The editable photo sits inside the template's existing inner circular boundary.
-  // Keep the decorative green/gold rings in the master template visible.
   const diameter = 430;
-  // Coordinates calibrated to the new 1055 × 1491 master template.
-  // The photo sits inside the existing circular frame; the frame artwork is untouched.
   const left = 303;
   const top = 255;
   const input = await sharp(photoPath)
@@ -58,11 +80,6 @@ async function photoLayer(photoPath) {
 export async function renderBuilderCard({ photoPath, name, builderId, teamName }) {
   await fs.mkdir(GENERATED_DIR, { recursive: true });
 
-  // Baselines are aligned to the three existing dashed lines in the master artwork.
-  // The values begin just after the printed labels; the labels themselves remain untouched.
-  // Dynamic text coordinates are calibrated against the actual master template.
-  // Native 1055x1491 template: dotted baselines are approximately y=1230, 1291, and 1352; text baselines sit ~9px above them.
-  // SVG text y-values are baselines, so keep the visible glyphs a few pixels above each line.
   const nameText = await fitText(name, 530, 28, 18);
   const idText = await fitText(builderId, 500, 25, 18);
   const teamText = await fitText(teamName, 500, 28, 18);
@@ -73,14 +90,34 @@ export async function renderBuilderCard({ photoPath, name, builderId, teamName }
     overlays.push(await photoLayer(photoPath));
   }
 
-  // Values only. The labels, icons, dotted lines, frame, and artwork.
+  const { notoSerifBase64: notoB64, robotoMonoBase64: robotoB64 } = await getEmbeddedFonts();
+
+  // Embedded @font-face style block ensures librsvg/sharp renders exact glyphs without relying on missing OS system fonts
+  const fontStyleBlock = (notoB64 && robotoB64) ? `
+    @font-face {
+      font-family: 'CardNotoSerif';
+      src: url(data:font/ttf;charset=utf-8;base64,${notoB64}) format('truetype');
+      font-weight: 700;
+      font-style: normal;
+    }
+    @font-face {
+      font-family: 'CardRobotoMono';
+      src: url(data:font/ttf;charset=utf-8;base64,${robotoB64}) format('truetype');
+      font-weight: 700;
+      font-style: normal;
+    }
+    .value { fill: ${COLORS.green}; font-family: 'CardNotoSerif', Georgia, serif; font-weight: 700; }
+    .code { fill: ${COLORS.green}; font-family: 'CardRobotoMono', monospace; font-weight: 700; }
+  ` : `
+    .value { fill: ${COLORS.green}; font-family: Georgia, serif; font-weight: 700; }
+    .code { fill: ${COLORS.green}; font-family: monospace; font-weight: 700; }
+  `;
+
   const textSvg = `
     <svg width="${WIDTH}" height="${HEIGHT}" xmlns="http://www.w3.org/2000/svg">
       <style>
-        .value { fill: ${COLORS.green}; font-family: "Noto Serif Display", "Noto Serif", Georgia, "Times New Roman", serif; font-weight: 700; }
-        .code { font-family: "DejaVu Sans Mono", "Courier New", monospace; font-weight: 700; }
+        ${fontStyleBlock}
       </style>
-      <!-- New-template coordinates: values sit above the existing dotted lines. -->
       <text class="value" x="360" y="1221" font-size="${nameText.size}px" letter-spacing="0.35px">${nameText.text}</text>
       <text class="value code" x="423" y="1282" font-size="${idText.size}px" letter-spacing="0.9px">${idText.text}</text>
       <text class="value" x="430" y="1343" font-size="${teamText.size}px" letter-spacing="0.35px">${teamText.text}</text>
@@ -101,4 +138,3 @@ export async function renderBuilderCard({ photoPath, name, builderId, teamName }
 }
 
 export const CARD_SIZE = { width: WIDTH, height: HEIGHT };
-
