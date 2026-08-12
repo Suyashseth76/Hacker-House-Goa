@@ -55,7 +55,7 @@ function setSessionCookie(res, token) {
 function getBuilderBySession(req) {
   const token = sessionTokenFrom(req);
   if (!token) return null;
-  return db.prepare('SELECT * FROM builders WHERE session_token = ?').get(token) || null;
+  return db.prepare('SELECT id, session_token, name, team_name, photo_url, builder_id, created_at, updated_at FROM builders WHERE session_token = ?').get(token) || null;
 }
 
 function getOrCreateBuilder(req, res) {
@@ -79,7 +79,7 @@ function getOrCreateBuilder(req, res) {
         VALUES (?, ?)
       `);
       const result = insert.run(token, builderId);
-      return db.prepare('SELECT * FROM builders WHERE id = ?').get(result.lastInsertRowid);
+      return db.prepare('SELECT id, session_token, name, team_name, photo_url, builder_id, created_at, updated_at FROM builders WHERE id = ?').get(result.lastInsertRowid);
     } catch (error) {
       if (!String(error?.message || '').includes('UNIQUE')) throw error;
       if (attempt === 99) throw new Error('Could not create a unique Builder ID.');
@@ -111,7 +111,7 @@ app.post('/api/session/refresh', async (req, res) => {
       VALUES (?, ?)
     `).run(token, builderId);
 
-    const row = db.prepare('SELECT * FROM builders WHERE session_token = ?').get(token);
+    const row = db.prepare('SELECT id, session_token, builder_id FROM builders WHERE session_token = ?').get(token);
     setSessionCookie(res, token);
     return res.json({ builderId: row.builder_id, cardSize: CARD_SIZE });
   } catch (error) {
@@ -131,12 +131,19 @@ app.get('/api/me', async (req, res) => {
       await fs.access(cardPath);
       hasCard = true;
     } catch {
-      if (row.name && row.team_name && (row.photo_url || row.photo_data)) {
+      if (row.name && row.team_name && row.photo_url) {
         try {
-          const photoPath = row.photo_url ? path.resolve(row.photo_url) : null;
+          const photoPath = path.resolve(row.photo_url);
+          let photoBuffer = null;
+          try {
+            await fs.access(photoPath);
+          } catch {
+            const blobRow = db.prepare('SELECT photo_data FROM builders WHERE id = ?').get(row.id);
+            photoBuffer = blobRow?.photo_data || null;
+          }
           await renderBuilderCard({
             photoPath,
-            photoBuffer: row.photo_data,
+            photoBuffer,
             name: row.name,
             builderId,
             teamName: row.team_name
@@ -186,7 +193,7 @@ app.post('/api/profile', upload.single('photo'), async (req, res) => {
 
     let row = getOrCreateBuilder(req, res);
     let photoPath = row.photo_url ? path.resolve(row.photo_url) : null;
-    let photoBuffer = row.photo_data || null;
+    let photoBuffer = null;
 
     if (req.file) {
       photoBuffer = req.file.buffer;
@@ -196,10 +203,10 @@ app.post('/api/profile', upload.single('photo'), async (req, res) => {
       db.prepare('UPDATE builders SET photo_url = ?, photo_data = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?')
         .run(relativePhotoPath, photoBuffer, row.id);
       row.photo_url = relativePhotoPath;
-      row.photo_data = photoBuffer;
     }
 
-    if (!photoPath && !photoBuffer) {
+    const hasPhoto = Boolean(photoPath || row.photo_url);
+    if (!hasPhoto) {
       return res.status(400).json({ error: 'Please upload a photo.' });
     }
 
@@ -241,32 +248,44 @@ app.post('/api/profile', upload.single('photo'), async (req, res) => {
 });
 
 app.get('/api/card/download', async (req, res) => {
-  const row = getBuilderBySession(req);
-  if (!row?.builder_id) return res.status(404).json({ error: 'No Builder ID card exists yet.' });
-
-  const filePath = path.join(GENERATED_DIR, `${row.builder_id}.png`);
   try {
-    await fs.access(filePath);
-  } catch {
-    if (row.name && row.team_name && (row.photo_url || row.photo_data)) {
-      try {
-        const photoPath = row.photo_url ? path.resolve(row.photo_url) : null;
-        await renderBuilderCard({
-          photoPath,
-          photoBuffer: row.photo_data,
-          name: row.name,
-          builderId: row.builder_id,
-          teamName: row.team_name
-        });
-      } catch (err) {
+    const row = getBuilderBySession(req);
+    if (!row?.builder_id) return res.status(404).json({ error: 'No Builder ID card exists yet.' });
+
+    const filePath = path.join(GENERATED_DIR, `${row.builder_id}.png`);
+    try {
+      await fs.access(filePath);
+    } catch {
+      if (row.name && row.team_name && row.photo_url) {
+        try {
+          const photoPath = path.resolve(row.photo_url);
+          let photoBuffer = null;
+          try {
+            await fs.access(photoPath);
+          } catch {
+            const blobRow = db.prepare('SELECT photo_data FROM builders WHERE id = ?').get(row.id);
+            photoBuffer = blobRow?.photo_data || null;
+          }
+          await renderBuilderCard({
+            photoPath,
+            photoBuffer,
+            name: row.name,
+            builderId: row.builder_id,
+            teamName: row.team_name
+          });
+        } catch (err) {
+          return res.status(404).json({ error: 'Generate the card first.' });
+        }
+      } else {
         return res.status(404).json({ error: 'Generate the card first.' });
       }
-    } else {
-      return res.status(404).json({ error: 'Generate the card first.' });
     }
-  }
 
-  res.download(filePath, `${row.builder_id}.png`);
+    return res.download(filePath, `${row.builder_id}.png`);
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ error: 'Could not download Builder ID card.' });
+  }
 });
 
 app.get('/api/health', (_req, res) => {

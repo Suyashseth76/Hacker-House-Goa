@@ -60,9 +60,21 @@ async function photoLayer(photoInput) {
 export async function renderBuilderCard({ photoPath, photoBuffer, name, builderId, teamName }) {
   await fs.mkdir(GENERATED_DIR, { recursive: true });
 
-  const nameText = await fitText(name, 510, 28, 14);
-  const idText = await fitText(builderId, 460, 25, 14);
-  const teamText = await fitText(teamName, 440, 28, 14);
+  const displayName = String(name || '').trim().toUpperCase();
+  const displayTeam = String(teamName || '').trim().toUpperCase();
+  const displayId = String(builderId || '').trim().toUpperCase();
+
+  console.log('[CARD RENDERER] Input Data:', {
+    name: displayName,
+    builderId: displayId,
+    teamName: displayTeam,
+    hasPhoto: Boolean(photoPath || photoBuffer)
+  });
+
+  // Calculate prominent font sizes (starting at 38px/32px/36px) with automatic scaling for unusually long values
+  const nameText = await fitText(displayName, 500, 38, 20);
+  const idText = await fitText(displayId, 440, 32, 18);
+  const teamText = await fitText(displayTeam, 420, 36, 18);
 
   const overlays = [];
 
@@ -71,28 +83,34 @@ export async function renderBuilderCard({ photoPath, photoBuffer, name, builderI
     overlays.push(await photoLayer(photoInput));
   }
 
-  // Values only. The labels, icons, dotted lines, frame, and artwork remain unchanged.
+  // Values only. Placed with exact 1055 × 1491 source template coordinates and matching viewBox.
   const textSvg = `
-    <svg width="${WIDTH}" height="${HEIGHT}" xmlns="http://www.w3.org/2000/svg">
-      <style>
-        .value { fill: ${COLORS.green}; font-family: "Noto Serif Display", "Noto Serif", Georgia, "Times New Roman", serif; font-weight: 700; }
-        .code { fill: ${COLORS.green}; font-family: "DejaVu Sans Mono", "Courier New", monospace; font-weight: 700; }
-      </style>
-      <text class="value" x="360" y="1221" font-size="${nameText.size}px" letter-spacing="0.35px">${nameText.text}</text>
-      <text class="value code" x="425" y="1282" font-size="${idText.size}px" letter-spacing="0.9px">${idText.text}</text>
-      <text class="value" x="435" y="1343" font-size="${teamText.size}px" letter-spacing="0.35px">${teamText.text}</text>
+    <svg width="${WIDTH}" height="${HEIGHT}" viewBox="0 0 ${WIDTH} ${HEIGHT}" xmlns="http://www.w3.org/2000/svg">
+      <text x="360" y="1222" fill="${COLORS.green}" font-family="Georgia, 'Times New Roman', serif, sans-serif" font-size="${nameText.size}px" font-weight="900" letter-spacing="0.5px">${nameText.text}</text>
+      <text x="425" y="1283" fill="${COLORS.green}" font-family="'Courier New', Console, monospace" font-size="${idText.size}px" font-weight="bold" letter-spacing="1.5px">${idText.text}</text>
+      <text x="445" y="1344" fill="${COLORS.green}" font-family="Georgia, 'Times New Roman', serif, sans-serif" font-size="${teamText.size}px" font-weight="900" letter-spacing="0.5px">${teamText.text}</text>
     </svg>
   `;
   overlays.push({ input: Buffer.from(textSvg), left: 0, top: 0 });
 
-  const safeId = builderId.replace(/[^A-Z0-9-]/g, '_');
+  const safeId = displayId.replace(/[^A-Z0-9-]/g, '_');
   const outputPath = path.join(GENERATED_DIR, `${safeId}.png`);
 
-  await sharp(TEMPLATE)
+  const buffer = await sharp(TEMPLATE)
     .resize(WIDTH, HEIGHT, { fit: 'contain', background: { r: 0, g: 0, b: 0, alpha: 0 } })
     .composite(overlays)
     .png({ compressionLevel: 9, adaptiveFiltering: true })
-    .toFile(outputPath);
+    .toBuffer();
+
+  const tempPath = `${outputPath}.${crypto.randomUUID()}.tmp`;
+  try {
+    await fs.writeFile(tempPath, buffer);
+    await fs.rename(tempPath, outputPath);
+  } catch {
+    await fs.writeFile(outputPath, buffer).catch(() => {});
+  } finally {
+    await fs.unlink(tempPath).catch(() => {});
+  }
 
   return outputPath;
 }

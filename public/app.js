@@ -27,7 +27,7 @@ function showUser(user, cardUrl) {
   if (currentBuilderId) {
     builderIdValue.textContent = currentBuilderId;
     existingId.classList.remove('hidden');
-    status.textContent = user?.name ? 'Active Builder' : 'Assigned Builder ID';
+    status.textContent = user?.name ? 'Active Builder' : 'New Builder ID';
   } else {
     existingId.classList.add('hidden');
     status.textContent = 'New Builder';
@@ -59,16 +59,34 @@ function showUser(user, cardUrl) {
 }
 
 async function loadExistingUser() {
+  nameInput.value = '';
+  teamInput.value = '';
+  photoInput.value = '';
+  photoInput.required = true;
+  currentCardUrl = null;
+  currentBuilderId = null;
+  builderIdValue.textContent = '—';
+  existingId.classList.add('hidden');
+  status.textContent = 'New Builder';
+  preview.src = `/master-template.png?reset=${Date.now()}`;
+  download.href = '#';
+  download.classList.add('disabled');
+  share.disabled = true;
+  emptyState.classList.add('hidden');
   setError('');
 
-  try {
-    const response = await fetch('/api/me', { method: 'GET', cache: 'no-store' });
-    const data = await response.json();
-    if (!response.ok) throw new Error(data.error || 'Could not fetch builder profile.');
+  const btnSpan = generateBtn.querySelector('span');
+  if (btnSpan) btnSpan.textContent = 'GENERATE BUILDER ID CARD';
 
-    if (data.user) {
-      showUser(data.user, data.cardUrl);
-    }
+  try {
+    const response = await fetch('/api/session/refresh', { method: 'POST', cache: 'no-store' });
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error || 'Could not start a fresh Builder ID session.');
+
+    currentBuilderId = data.builderId;
+    builderIdValue.textContent = data.builderId;
+    existingId.classList.remove('hidden');
+    status.textContent = 'New Builder ID';
   } catch (error) {
     setError(error.message);
   }
