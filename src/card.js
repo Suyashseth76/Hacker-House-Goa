@@ -2,7 +2,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import sharp from 'sharp';
 import opentype from 'opentype.js';
-import { NOTO_SERIF_BOLD_BASE64, ROBOTO_MONO_BOLD_BASE64 } from './fonts.js';
+import { ROBOTO_MONO_BOLD_BASE64 } from './fonts.js';
 
 const WIDTH = 1055;
 const HEIGHT = 1491;
@@ -13,35 +13,24 @@ const COLORS = {
   green: '#0b4939'
 };
 
-// Cached Opentype parsed font instances in memory
-let notoFont = null;
+// Cached Opentype parsed font instance in memory
 let robotoFont = null;
 
-function loadFonts() {
-  if (!notoFont || !robotoFont) {
-    const notoBuf = Buffer.from(NOTO_SERIF_BOLD_BASE64, 'base64');
+function loadFont() {
+  if (!robotoFont) {
     const robotoBuf = Buffer.from(ROBOTO_MONO_BOLD_BASE64, 'base64');
-
-    const notoAb = notoBuf.buffer.slice(notoBuf.byteOffset, notoBuf.byteOffset + notoBuf.byteLength);
     const robotoAb = robotoBuf.buffer.slice(robotoBuf.byteOffset, robotoBuf.byteOffset + robotoBuf.byteLength);
-
-    notoFont = opentype.parse(notoAb);
     robotoFont = opentype.parse(robotoAb);
   }
-  return { notoFont, robotoFont };
+  return robotoFont;
 }
 
-function fitTextSize(text, maxWidth, startSize = 28, minSize = 18) {
+function fitTextSize(text, maxWidth, startSize = 26, minSize = 16) {
   const str = String(text || '').trim();
   for (let size = startSize; size >= minSize; size -= 1) {
-    if (str.length * size * 0.58 <= maxWidth) return { text: str, size };
+    if (str.length * size * 0.6 <= maxWidth) return { text: str, size };
   }
   return { text: str, size: minSize };
-}
-
-function toSvgPath(pathObj) {
-  // Replace any NaN values in SVG path strings to prevent Sharp / librsvg path parser truncation
-  return pathObj.toSVG(2).replace(/NaN/g, '0');
 }
 
 async function photoLayer(photoPath) {
@@ -73,9 +62,9 @@ export async function renderBuilderCard({ photoPath, name, builderId, teamName }
   const cleanId = String(builderId || '').trim();
   const cleanTeam = String(teamName || '').trim();
 
-  const nameText = fitTextSize(cleanName, 530, 28, 18);
-  const idText = fitTextSize(cleanId, 500, 25, 18);
-  const teamText = fitTextSize(cleanTeam, 500, 28, 18);
+  const nameText = fitTextSize(cleanName, 530, 26, 16);
+  const idText = fitTextSize(cleanId, 500, 25, 16);
+  const teamText = fitTextSize(cleanTeam, 500, 26, 16);
 
   const overlays = [];
 
@@ -83,13 +72,13 @@ export async function renderBuilderCard({ photoPath, name, builderId, teamName }
     overlays.push(await photoLayer(photoPath));
   }
 
-  const { notoFont: nFont, robotoFont: rFont } = loadFonts();
+  const font = loadFont();
 
   // Convert text values directly into SVG vector <path> commands.
-  // Vector SVG paths DO NOT require system fonts or fontconfig, rendering 100% reliably on Vercel Serverless without small tofu boxes.
-  const namePath = nFont.getPath(nameText.text, 360, 1221, nameText.size);
-  const idPath = rFont.getPath(idText.text, 423, 1282, idText.size);
-  const teamPath = nFont.getPath(teamText.text, 430, 1343, teamText.size);
+  // Vector SVG paths DO NOT require system fonts or fontconfig, rendering 100% clean and reliable on Vercel Serverless.
+  const namePath = font.getPath(nameText.text, 360, 1221, nameText.size);
+  const idPath = font.getPath(idText.text, 423, 1282, idText.size);
+  const teamPath = font.getPath(teamText.text, 430, 1343, teamText.size);
 
   namePath.fill = COLORS.green;
   idPath.fill = COLORS.green;
@@ -97,9 +86,9 @@ export async function renderBuilderCard({ photoPath, name, builderId, teamName }
 
   const textSvg = `
     <svg width="${WIDTH}" height="${HEIGHT}" xmlns="http://www.w3.org/2000/svg">
-      ${toSvgPath(namePath)}
-      ${toSvgPath(idPath)}
-      ${toSvgPath(teamPath)}
+      ${namePath.toSVG(2)}
+      ${idPath.toSVG(2)}
+      ${teamPath.toSVG(2)}
     </svg>
   `;
   overlays.push({ input: Buffer.from(textSvg), left: 0, top: 0 });
