@@ -1722,14 +1722,15 @@ body::before {
 .panel,
 .action-card {
   transform-style: preserve-3d !important;
+  will-change: transform !important;
   transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.35s ease, border-color 0.35s ease !important;
-  background: linear-gradient(145deg, rgba(255, 248, 231, 0.94), rgba(247, 237, 207, 0.85)) !important;
+  background: linear-gradient(145deg, rgba(255, 248, 231, 0.96), rgba(247, 237, 207, 0.9)) !important;
   border: 1.5px solid rgba(201, 149, 62, 0.35) !important;
   box-shadow: 
-    0 25px 50px -12px rgba(2, 26, 20, 0.5),
+    0 20px 45px -12px rgba(2, 26, 20, 0.45),
     0 0 0 1px rgba(255, 255, 255, 0.4) inset,
     0 10px 25px rgba(201, 149, 62, 0.15) !important;
-  backdrop-filter: blur(16px) !important;
+  backdrop-filter: blur(6px) !important;
 }
 
 .action-card {

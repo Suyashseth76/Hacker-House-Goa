@@ -1,6 +1,7 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import sharp from 'sharp';
+import { NOTO_SERIF_BOLD_BASE64, ROBOTO_MONO_BOLD_BASE64 } from './fonts.js';
 
 const WIDTH = 1055;
 const HEIGHT = 1491;
@@ -10,33 +11,6 @@ const GENERATED_DIR = process.env.VERCEL ? path.resolve('/tmp/generated') : path
 const COLORS = {
   green: '#0b4939'
 };
-
-// Cached Base64 Font Buffers for Self-Contained SVG Text Rendering
-let notoSerifBase64 = null;
-let robotoMonoBase64 = null;
-
-async function getEmbeddedFonts() {
-  if (notoSerifBase64 && robotoMonoBase64) {
-    return { notoSerifBase64, robotoMonoBase64 };
-  }
-
-  try {
-    const notoPath = path.resolve('assets/fonts/NotoSerif-Bold.ttf');
-    const robotoPath = path.resolve('assets/fonts/RobotoMono-Bold.ttf');
-
-    const [notoBuf, robotoBuf] = await Promise.all([
-      fs.readFile(notoPath),
-      fs.readFile(robotoPath)
-    ]);
-
-    notoSerifBase64 = notoBuf.toString('base64');
-    robotoMonoBase64 = robotoBuf.toString('base64');
-  } catch (err) {
-    console.error('Warning: Could not load local font files for SVG embedding:', err.message);
-  }
-
-  return { notoSerifBase64, robotoMonoBase64 };
-}
 
 async function fitText(text, maxWidth, startSize = 28, minSize = 18) {
   const escaped = escapeXml(text);
@@ -90,33 +64,24 @@ export async function renderBuilderCard({ photoPath, name, builderId, teamName }
     overlays.push(await photoLayer(photoPath));
   }
 
-  const { notoSerifBase64: notoB64, robotoMonoBase64: robotoB64 } = await getEmbeddedFonts();
-
-  // Embedded @font-face style block ensures librsvg/sharp renders exact glyphs without relying on missing OS system fonts
-  const fontStyleBlock = (notoB64 && robotoB64) ? `
-    @font-face {
-      font-family: 'CardNotoSerif';
-      src: url(data:font/ttf;charset=utf-8;base64,${notoB64}) format('truetype');
-      font-weight: 700;
-      font-style: normal;
-    }
-    @font-face {
-      font-family: 'CardRobotoMono';
-      src: url(data:font/ttf;charset=utf-8;base64,${robotoB64}) format('truetype');
-      font-weight: 700;
-      font-style: normal;
-    }
-    .value { fill: ${COLORS.green}; font-family: 'CardNotoSerif', Georgia, serif; font-weight: 700; }
-    .code { fill: ${COLORS.green}; font-family: 'CardRobotoMono', monospace; font-weight: 700; }
-  ` : `
-    .value { fill: ${COLORS.green}; font-family: Georgia, serif; font-weight: 700; }
-    .code { fill: ${COLORS.green}; font-family: monospace; font-weight: 700; }
-  `;
-
+  // Embedded inline TTF font data guarantees exact glyph rendering in Vercel Serverless & all OS environments
   const textSvg = `
     <svg width="${WIDTH}" height="${HEIGHT}" xmlns="http://www.w3.org/2000/svg">
       <style>
-        ${fontStyleBlock}
+        @font-face {
+          font-family: 'CardNotoSerif';
+          src: url(data:font/ttf;charset=utf-8;base64,${NOTO_SERIF_BOLD_BASE64}) format('truetype');
+          font-weight: 700;
+          font-style: normal;
+        }
+        @font-face {
+          font-family: 'CardRobotoMono';
+          src: url(data:font/ttf;charset=utf-8;base64,${ROBOTO_MONO_BOLD_BASE64}) format('truetype');
+          font-weight: 700;
+          font-style: normal;
+        }
+        .value { fill: ${COLORS.green}; font-family: 'CardNotoSerif', Georgia, serif; font-weight: 700; }
+        .code { fill: ${COLORS.green}; font-family: 'CardRobotoMono', monospace; font-weight: 700; }
       </style>
       <text class="value" x="360" y="1221" font-size="${nameText.size}px" letter-spacing="0.35px">${nameText.text}</text>
       <text class="value code" x="423" y="1282" font-size="${idText.size}px" letter-spacing="0.9px">${idText.text}</text>
