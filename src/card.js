@@ -1,6 +1,7 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import sharp from 'sharp';
+import opentype from 'opentype.js';
 import { NOTO_SERIF_BOLD_BASE64, ROBOTO_MONO_BOLD_BASE64 } from './fonts.js';
 
 const WIDTH = 1055;
@@ -12,21 +13,30 @@ const COLORS = {
   green: '#0b4939'
 };
 
-async function fitText(text, maxWidth, startSize = 28, minSize = 18) {
-  const escaped = escapeXml(text);
-  for (let size = startSize; size >= minSize; size -= 1) {
-    if (escaped.length * size * 0.58 <= maxWidth) return { text: escaped, size };
+// Cached Opentype parsed font instances in memory
+let notoFont = null;
+let robotoFont = null;
+
+function loadFonts() {
+  if (!notoFont || !robotoFont) {
+    const notoBuf = Buffer.from(NOTO_SERIF_BOLD_BASE64, 'base64');
+    const robotoBuf = Buffer.from(ROBOTO_MONO_BOLD_BASE64, 'base64');
+
+    const notoAb = notoBuf.buffer.slice(notoBuf.byteOffset, notoBuf.byteOffset + notoBuf.byteLength);
+    const robotoAb = robotoBuf.buffer.slice(robotoBuf.byteOffset, robotoBuf.byteOffset + robotoBuf.byteLength);
+
+    notoFont = opentype.parse(notoAb);
+    robotoFont = opentype.parse(robotoAb);
   }
-  return { text: escaped, size: minSize };
+  return { notoFont, robotoFont };
 }
 
-function escapeXml(value) {
-  return String(value)
-    .replaceAll('&', '&amp;')
-    .replaceAll('<', '&lt;')
-    .replaceAll('>', '&gt;')
-    .replaceAll('"', '&quot;')
-    .replaceAll("'", '&apos;');
+function fitTextSize(text, maxWidth, startSize = 28, minSize = 18) {
+  const str = String(text || '').trim();
+  for (let size = startSize; size >= minSize; size -= 1) {
+    if (str.length * size * 0.58 <= maxWidth) return { text: str, size };
+  }
+  return { text: str, size: minSize };
 }
 
 async function photoLayer(photoPath) {
@@ -54,9 +64,13 @@ async function photoLayer(photoPath) {
 export async function renderBuilderCard({ photoPath, name, builderId, teamName }) {
   await fs.mkdir(GENERATED_DIR, { recursive: true });
 
-  const nameText = await fitText(name, 530, 28, 18);
-  const idText = await fitText(builderId, 500, 25, 18);
-  const teamText = await fitText(teamName, 500, 28, 18);
+  const cleanName = String(name || '').trim();
+  const cleanId = String(builderId || '').trim();
+  const cleanTeam = String(teamName || '').trim();
+
+  const nameText = fitTextSize(cleanName, 530, 28, 18);
+  const idText = fitTextSize(cleanId, 500, 25, 18);
+  const teamText = fitTextSize(cleanTeam, 500, 28, 18);
 
   const overlays = [];
 
@@ -64,33 +78,28 @@ export async function renderBuilderCard({ photoPath, name, builderId, teamName }
     overlays.push(await photoLayer(photoPath));
   }
 
-  // Embedded inline TTF font data guarantees exact glyph rendering in Vercel Serverless & all OS environments
+  const { notoFont: nFont, robotoFont: rFont } = loadFonts();
+
+  // Convert text values directly into SVG vector <path> commands.
+  // Vector SVG paths DO NOT require system fonts or fontconfig, rendering 100% reliably on Vercel Serverless without small tofu boxes.
+  const namePath = nFont.getPath(nameText.text, 360, 1221, nameText.size);
+  const idPath = rFont.getPath(idText.text, 423, 1282, idText.size);
+  const teamPath = nFont.getPath(teamText.text, 430, 1343, teamText.size);
+
+  namePath.fill = COLORS.green;
+  idPath.fill = COLORS.green;
+  teamPath.fill = COLORS.green;
+
   const textSvg = `
     <svg width="${WIDTH}" height="${HEIGHT}" xmlns="http://www.w3.org/2000/svg">
-      <style>
-        @font-face {
-          font-family: 'CardNotoSerif';
-          src: url(data:font/ttf;charset=utf-8;base64,${NOTO_SERIF_BOLD_BASE64}) format('truetype');
-          font-weight: 700;
-          font-style: normal;
-        }
-        @font-face {
-          font-family: 'CardRobotoMono';
-          src: url(data:font/ttf;charset=utf-8;base64,${ROBOTO_MONO_BOLD_BASE64}) format('truetype');
-          font-weight: 700;
-          font-style: normal;
-        }
-        .value { fill: ${COLORS.green}; font-family: 'CardNotoSerif', Georgia, serif; font-weight: 700; }
-        .code { fill: ${COLORS.green}; font-family: 'CardRobotoMono', monospace; font-weight: 700; }
-      </style>
-      <text class="value" x="360" y="1221" font-size="${nameText.size}px" letter-spacing="0.35px">${nameText.text}</text>
-      <text class="value code" x="423" y="1282" font-size="${idText.size}px" letter-spacing="0.9px">${idText.text}</text>
-      <text class="value" x="430" y="1343" font-size="${teamText.size}px" letter-spacing="0.35px">${teamText.text}</text>
+      ${namePath.toSVG(2)}
+      ${idPath.toSVG(2)}
+      ${teamPath.toSVG(2)}
     </svg>
   `;
   overlays.push({ input: Buffer.from(textSvg), left: 0, top: 0 });
 
-  const safeId = builderId.replace(/[^A-Z0-9-]/g, '_');
+  const safeId = cleanId.replace(/[^A-Z0-9-]/g, '_');
   const outputPath = path.join(GENERATED_DIR, `${safeId}.png`);
 
   await sharp(TEMPLATE)

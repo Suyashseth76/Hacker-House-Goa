@@ -1,88 +1,25 @@
 /**
- * Hacker House Goa 2026 — Optimized 3D Motion & Parallax Engine
- * Highly performant, single-loop hardware-accelerated 3D effects.
+ * Hacker House Goa 2026 — Interactive Background & Cursor Motion Engine
+ * Keeps Builder ID card, Crew frame, and form panels 100% stationary while providing dynamic background motion.
  */
 
 (function () {
   'use strict';
 
-  const SELECTOR = '.action-card, .panel, .tilt-3d, .hero-stamp, .card-frame, .crew-canvas-container';
-
   function init3DEffects() {
-    const tiltElements = document.querySelectorAll(SELECTOR);
+    // Note: Builder ID card frame, Crew frame, and form panels are kept 100% stationary as requested.
 
-    // 1. Setup 3D Tilt for cards
-    tiltElements.forEach((el) => {
-      el.style.transformStyle = 'preserve-3d';
-      el.style.willChange = 'transform';
+    // 1. Cursor Light Follower
+    initCursorGlow();
 
-      let bounds = null;
-      let currentRotateX = 0;
-      let currentRotateY = 0;
-      let targetRotateX = 0;
-      let targetRotateY = 0;
-      let isHovered = false;
-      let animId = null;
+    // 2. Cursor-Reactive Background Grid & Parallax Motion
+    initBackgroundParallax();
 
-      function updateBounds() {
-        bounds = el.getBoundingClientRect();
-      }
-
-      function onMouseEnter() {
-        updateBounds();
-        isHovered = true;
-        animLoop();
-      }
-
-      function onMouseMove(e) {
-        if (!bounds) updateBounds();
-        const x = e.clientX - bounds.left;
-        const y = e.clientY - bounds.top;
-
-        const normX = (x / bounds.width) * 2 - 1;
-        const normY = (y / bounds.height) * 2 - 1;
-
-        targetRotateX = -normY * 12;
-        targetRotateY = normX * 12;
-
-        const pctX = (x / bounds.width) * 100;
-        const pctY = (y / bounds.height) * 100;
-        el.style.setProperty('--mouse-x', `${pctX}%`);
-        el.style.setProperty('--mouse-y', `${pctY}%`);
-      }
-
-      function onMouseLeave() {
-        isHovered = false;
-        targetRotateX = 0;
-        targetRotateY = 0;
-      }
-
-      function animLoop() {
-        currentRotateX += (targetRotateX - currentRotateX) * 0.14;
-        currentRotateY += (targetRotateY - currentRotateY) * 0.14;
-
-        if (isHovered || Math.abs(currentRotateX) > 0.05 || Math.abs(currentRotateY) > 0.05) {
-          const translateZ = isHovered ? 12 : 0;
-          const scale = isHovered ? 1.02 : 1;
-          el.style.transform = `perspective(1000px) rotateX(${currentRotateX.toFixed(2)}deg) rotateY(${currentRotateY.toFixed(2)}deg) translateZ(${translateZ}px) scale3d(${scale}, ${scale}, ${scale})`;
-          animId = requestAnimationFrame(animLoop);
-        } else {
-          el.style.transform = 'perspective(1000px) rotateX(0deg) rotateY(0deg) translateZ(0px) scale3d(1, 1, 1)';
-          cancelAnimationFrame(animId);
-        }
-      }
-
-      el.addEventListener('mouseenter', onMouseEnter, { passive: true });
-      el.addEventListener('mousemove', onMouseMove, { passive: true });
-      el.addEventListener('mouseleave', onMouseLeave, { passive: true });
-    });
-
-    // 2. Optimized Unified Master Animation Loop for Background Parallax & Particles
-    initMasterBackgroundEngine();
+    // 3. Interactive Background Particle System
+    initInteractiveBackgroundParticles();
   }
 
-  function initMasterBackgroundEngine() {
-    // Create cursor glow orb
+  function initCursorGlow() {
     let cursorOrb = document.querySelector('.cursor-3d-glow');
     if (!cursorOrb) {
       cursorOrb = document.createElement('div');
@@ -90,7 +27,73 @@
       document.body.appendChild(cursorOrb);
     }
 
-    // Create interactive background canvas
+    let curX = window.innerWidth / 2;
+    let curY = window.innerHeight / 2;
+    let targetX = curX;
+    let targetY = curY;
+
+    window.addEventListener('mousemove', (e) => {
+      targetX = e.clientX;
+      targetY = e.clientY;
+    }, { passive: true });
+
+    function moveCursor() {
+      curX += (targetX - curX) * 0.14;
+      curY += (targetY - curY) * 0.14;
+      cursorOrb.style.transform = `translate3d(${(curX - 150).toFixed(1)}px, ${(curY - 150).toFixed(1)}px, 0)`;
+      requestAnimationFrame(moveCursor);
+    }
+    requestAnimationFrame(moveCursor);
+  }
+
+  function initBackgroundParallax() {
+    const gridBg = document.querySelector('.grid-3d-bg');
+    const palms = document.querySelectorAll('.floating-palm');
+    const glowingSun = document.querySelector('.glowing-sun');
+    const glowOrbs = document.querySelectorAll('.glow-orb');
+
+    let targetOffsetX = 0;
+    let targetOffsetY = 0;
+    let currentOffsetX = 0;
+    let currentOffsetY = 0;
+
+    window.addEventListener('mousemove', (e) => {
+      const normX = (e.clientX / window.innerWidth) * 2 - 1;
+      const normY = (e.clientY / window.innerHeight) * 2 - 1;
+
+      targetOffsetX = normX * 25;
+      targetOffsetY = normY * 18;
+    }, { passive: true });
+
+    function renderParallax() {
+      currentOffsetX += (targetOffsetX - currentOffsetX) * 0.08;
+      currentOffsetY += (targetOffsetY - currentOffsetY) * 0.08;
+
+      if (gridBg) {
+        gridBg.style.transform = `perspective(600px) rotateX(60deg) translate3d(${currentOffsetX.toFixed(1)}px, ${(currentOffsetY - 100).toFixed(1)}px, 0) scale(2.2)`;
+      }
+
+      palms.forEach((palm, idx) => {
+        const factor = (idx + 1) * -0.4;
+        palm.style.transform = `translate3d(${(currentOffsetX * factor).toFixed(1)}px, ${(currentOffsetY * factor).toFixed(1)}px, 0)`;
+      });
+
+      if (glowingSun) {
+        glowingSun.style.transform = `translate3d(${(currentOffsetX * 0.3).toFixed(1)}px, ${(currentOffsetY * 0.3).toFixed(1)}px, 0)`;
+      }
+
+      glowOrbs.forEach((orb, idx) => {
+        const factor = idx % 2 === 0 ? 0.4 : -0.4;
+        orb.style.transform = `translate3d(${(currentOffsetX * factor).toFixed(1)}px, ${(currentOffsetY * factor).toFixed(1)}px, 0)`;
+      });
+
+      requestAnimationFrame(renderParallax);
+    }
+
+    requestAnimationFrame(renderParallax);
+  }
+
+  function initInteractiveBackgroundParticles() {
     let canvas = document.getElementById('bg-interactive-canvas');
     if (!canvas) {
       canvas = document.createElement('canvas');
@@ -108,7 +111,6 @@
       height = canvas.height = window.innerHeight;
     }, { passive: true });
 
-    // Track mouse coordinates
     let mouseX = width / 2;
     let mouseY = height / 2;
 
@@ -117,19 +119,6 @@
       mouseY = e.clientY;
     }, { passive: true });
 
-    // Background DOM elements for parallax
-    const gridBg = document.querySelector('.grid-3d-bg');
-    const palms = document.querySelectorAll('.floating-palm');
-    const glowingSun = document.querySelector('.glowing-sun');
-    const glowOrbs = document.querySelectorAll('.glow-orb');
-
-    // Smooth position lerp variables
-    let curCursorX = mouseX;
-    let curCursorY = mouseY;
-    let currentParallaxX = 0;
-    let currentParallaxY = 0;
-
-    // Optimized particle list (18 particles for silky smooth performance)
     const particleCount = 18;
     const particles = [];
     const colors = ['#ffe000', '#ff007f', '#147b70', '#e9a33f'];
@@ -147,44 +136,25 @@
       });
     }
 
-    // Unified 60fps Frame Master Loop
-    function masterLoop() {
-      // 1. Smooth Cursor Orb Lerp
-      curCursorX += (mouseX - curCursorX) * 0.15;
-      curCursorY += (mouseY - curCursorY) * 0.15;
-      cursorOrb.style.transform = `translate3d(${(curCursorX - 150).toFixed(1)}px, ${(curCursorY - 150).toFixed(1)}px, 0)`;
-
-      // 2. Smooth Background Elements Parallax Shift
-      const normX = (mouseX / width) * 2 - 1;
-      const normY = (mouseY / height) * 2 - 1;
-      const targetParallaxX = normX * 25;
-      const targetParallaxY = normY * 18;
-
-      currentParallaxX += (targetParallaxX - currentParallaxX) * 0.08;
-      currentParallaxY += (targetParallaxY - currentParallaxY) * 0.08;
-
-      if (gridBg) {
-        gridBg.style.transform = `perspective(600px) rotateX(60deg) translate3d(${currentParallaxX.toFixed(1)}px, ${(currentParallaxY - 100).toFixed(1)}px, 0) scale(2.2)`;
-      }
-
-      palms.forEach((palm, idx) => {
-        const factor = (idx + 1) * -0.5;
-        palm.style.transform = `translate3d(${(currentParallaxX * factor).toFixed(1)}px, ${(currentParallaxY * factor).toFixed(1)}px, 0)`;
-      });
-
-      if (glowingSun) {
-        glowingSun.style.transform = `translate3d(${(currentParallaxX * 0.35).toFixed(1)}px, ${(currentParallaxY * 0.35).toFixed(1)}px, 0)`;
-      }
-
-      glowOrbs.forEach((orb, idx) => {
-        const factor = idx % 2 === 0 ? 0.5 : -0.5;
-        orb.style.transform = `translate3d(${(currentParallaxX * factor).toFixed(1)}px, ${(currentParallaxY * factor).toFixed(1)}px, 0)`;
-      });
-
-      // 3. Lightweight Canvas Particle Renderer
+    function animateParticles() {
       ctx.clearRect(0, 0, width, height);
+
       for (let i = 0; i < particleCount; i++) {
         const p = particles[i];
+
+        const dx = mouseX - p.x;
+        const dy = mouseY - p.y;
+        const dist = Math.hypot(dx, dy);
+
+        if (dist < 220) {
+          const force = (220 - dist) / 220;
+          p.vx += (dx / dist) * force * 0.03;
+          p.vy += (dy / dist) * force * 0.03;
+        }
+
+        p.vx *= 0.98;
+        p.vy *= 0.98;
+
         p.x += p.vx;
         p.y += p.vy;
 
@@ -206,10 +176,10 @@
         }
       }
 
-      requestAnimationFrame(masterLoop);
+      requestAnimationFrame(animateParticles);
     }
 
-    requestAnimationFrame(masterLoop);
+    requestAnimationFrame(animateParticles);
   }
 
   if (document.readyState === 'loading') {
