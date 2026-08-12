@@ -22,6 +22,18 @@ templateImg.onload = () => {
 // Store up to 3 loaded member photo images
 const memberPhotos = [null, null, null];
 
+// Handle selfie camera setup for squad members
+if (window.SelfieCamera) {
+  document.querySelectorAll('.m-selfie-btn').forEach((btn) => {
+    const idx = btn.dataset.index;
+    const input = document.querySelector(`.m-photo[data-index="${idx}"]`);
+    const container = document.querySelector(`.m-photo-container[data-index="${idx}"]`);
+    if (input) {
+      window.SelfieCamera.setupButton(btn, input, container);
+    }
+  });
+}
+
 // Handle member photo file uploads
 document.querySelectorAll('.m-photo').forEach((input) => {
   input.addEventListener('change', (e) => {

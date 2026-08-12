@@ -22,11 +22,14 @@
     </div>
   </nav>
 
+  <!-- 3D Perspective Grid Background -->
+  <div class="grid-3d-bg" aria-hidden="true"></div>
+
   <main class="page-shell">
     <header class="hero">
       <a href="/">
         <img
-          class="hero-logo"
+          class="hero-logo tilt-3d"
           src="/hacker-house-goa-logo-clean.png"
           alt="Hacker House Goa"
         />
@@ -37,7 +40,7 @@
     </header>
 
     <section class="workspace">
-      <form id="crew-form" class="panel form-panel">
+      <form id="crew-form" class="panel form-panel tilt-3d">
         <div class="panel-ornament" aria-hidden="true"><span>✦</span><span>✦</span><span>✦</span></div>
         <div class="panel-title">
           <div>
@@ -76,9 +79,12 @@
               <span>Builder Title</span>
               <input class="m-title" data-index="0" placeholder="e.g. Captain Hacker" value="“Captain Hacker”" />
             </label>
-            <label class="field photo-field">
+            <label class="field photo-field m-photo-container" data-index="0">
               <span>Photo Avatar</span>
-              <input class="m-photo" data-index="0" type="file" accept="image/jpeg,image/png,image/webp" />
+              <div class="photo-input-controls">
+                <input class="m-photo" data-index="0" type="file" accept="image/jpeg,image/png,image/webp" />
+                <button type="button" class="selfie-btn m-selfie-btn" data-index="0">📷 Take Selfie</button>
+              </div>
             </label>
           </div>
 
@@ -101,9 +107,12 @@
               <span>Builder Title</span>
               <input class="m-title" data-index="1" placeholder="e.g. Neural Architect" value="“Neural Architect”" />
             </label>
-            <label class="field photo-field">
+            <label class="field photo-field m-photo-container" data-index="1">
               <span>Photo Avatar</span>
-              <input class="m-photo" data-index="1" type="file" accept="image/jpeg,image/png,image/webp" />
+              <div class="photo-input-controls">
+                <input class="m-photo" data-index="1" type="file" accept="image/jpeg,image/png,image/webp" />
+                <button type="button" class="selfie-btn m-selfie-btn" data-index="1">📷 Take Selfie</button>
+              </div>
             </label>
           </div>
 
@@ -126,9 +135,12 @@
               <span>Builder Title</span>
               <input class="m-title" data-index="2" placeholder="e.g. Design Alchemist" value="“Design Alchemist”" />
             </label>
-            <label class="field photo-field">
+            <label class="field photo-field m-photo-container" data-index="2">
               <span>Photo Avatar</span>
-              <input class="m-photo" data-index="2" type="file" accept="image/jpeg,image/png,image/webp" />
+              <div class="photo-input-controls">
+                <input class="m-photo" data-index="2" type="file" accept="image/jpeg,image/png,image/webp" />
+                <button type="button" class="selfie-btn m-selfie-btn" data-index="2">📷 Take Selfie</button>
+              </div>
             </label>
           </div>
         </div>
@@ -143,7 +155,7 @@
         </div>
       </form>
 
-      <section class="panel preview-panel">
+      <section class="panel preview-panel tilt-3d">
         <div class="panel-title preview-title">
           <div>
             <p class="section-kicker">OFFICIAL CREW FRAME</p>
@@ -175,6 +187,8 @@
     </footer>
   </main>
 
+  <script src="/selfie.js?v=1" defer></script>
+  <script src="/3d-effects.js?v=1" defer></script>
   <script src="/crew-app.js?v=2" defer></script>
 </body>
 </html>

@@ -22,11 +22,14 @@
     </div>
   </nav>
 
+  <!-- 3D Perspective Grid Background -->
+  <div class="grid-3d-bg" aria-hidden="true"></div>
+
   <main class="page-shell">
     <header class="hero">
       <a href="/">
         <img
-          class="hero-logo"
+          class="hero-logo tilt-3d"
           src="/hacker-house-goa-logo-clean.png"
           alt="Hacker House Goa"
         />
@@ -37,7 +40,7 @@
     </header>
 
     <section class="workspace">
-      <form id="builder-form" class="panel form-panel">
+      <form id="builder-form" class="panel form-panel tilt-3d">
         <div class="panel-ornament" aria-hidden="true"><span>✦</span><span>✦</span><span>✦</span></div>
         <div class="panel-title">
           <div>
@@ -59,10 +62,13 @@
           </label>
         </div>
 
-        <label class="field photo-field">
+        <label class="field photo-field" id="photo-field-container">
           <span>Photo</span>
-          <input id="photo" name="photo" type="file" accept="image/jpeg,image/png,image/webp" required />
-          <small>Use a clear portrait or landscape photo. It will be cropped into the existing circular frame.</small>
+          <div class="photo-input-controls">
+            <input id="photo" name="photo" type="file" accept="image/jpeg,image/png,image/webp" required />
+            <button type="button" id="btn-selfie-photo" class="selfie-btn">📷 Take Selfie</button>
+          </div>
+          <small>Use a clear portrait photo or click "Take Selfie" to snap one on the spot!</small>
         </label>
 
         <div id="existing-id" class="existing-id hidden">
@@ -84,7 +90,7 @@
         </div>
       </form>
 
-      <section class="panel preview-panel">
+      <section class="panel preview-panel tilt-3d">
         <div class="panel-title preview-title">
           <div>
             <p class="section-kicker">OFFICIAL EVENT PASS</p>
@@ -118,6 +124,8 @@
       <span>Card export: exactly 1055 × 1491 px · GOA / INDIA</span>
     </footer>
   </main>
+  <script src="/selfie.js?v=1" defer></script>
+  <script src="/3d-effects.js?v=1" defer></script>
   <script src="/app.js?v=5" defer></script>
 </body>
 </html>

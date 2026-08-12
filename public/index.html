@@ -23,6 +23,9 @@
     </div>
   </nav>
 
+  <!-- 3D Perspective Grid Background -->
+  <div class="grid-3d-bg" aria-hidden="true"></div>
+
   <!-- Ambient Palm Background Elements -->
   <div class="landing-ambient" aria-hidden="true">
     <div class="floating-palm palm-left">🌴</div>
@@ -37,7 +40,7 @@
     <header class="landing-hero">
       <div class="logo-wrapper">
         <img
-          class="landing-logo"
+          class="landing-logo tilt-3d"
           src="/hacker-house-goa-logo-clean.png"
           alt="Hacker House Goa Logo"
         />
@@ -59,7 +62,7 @@
     <!-- Two Action Cards Section (The Core Requirement) -->
     <section class="action-grid">
       <!-- Card 1: Generate Builder ID -->
-      <article class="action-card builder-card">
+      <article class="action-card builder-card tilt-3d">
         <div class="card-glow"></div>
         <div class="card-header">
           <span class="card-tag">OFFICIAL PASS • 1055 × 1491 PX</span>
@@ -81,7 +84,7 @@
       </article>
 
       <!-- Card 2: Generate Crew / Team Frame -->
-      <article class="action-card crew-card">
+      <article class="action-card crew-card tilt-3d">
         <div class="card-glow"></div>
         <div class="card-header">
           <span class="card-tag crew-tag">SQUAD BADGE • 1024 × 989 PX</span>
@@ -103,5 +106,6 @@
       </article>
     </section>
   </main>
+  <script src="/3d-effects.js?v=1" defer></script>
 </body>
 </html>

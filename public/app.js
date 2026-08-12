@@ -78,6 +78,12 @@ async function loadExistingUser() {
 
 
 
+const selfieBtn = document.querySelector('#btn-selfie-photo');
+
+if (selfieBtn && window.SelfieCamera) {
+  window.SelfieCamera.setupButton(selfieBtn, photoInput, document.querySelector('#photo-field-container'));
+}
+
 photoInput.addEventListener('change', () => {
   const file = photoInput.files?.[0];
   if (!file) return;
